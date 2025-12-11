@@ -1,0 +1,1145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>Seoul Soundscape</title>
+
+  <!-- 로컬 폰트: IPAMincho-Regular.ttf (index.html 과 같은 폴더) -->
+  <style>
+    @font-face {
+      font-family: "IPAMincho";
+      src: url("IPAMincho-Regular.ttf") format("truetype");
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: "IPAMincho", system-ui, -apple-system, BlinkMacSystemFont, serif;
+    }
+
+    .layout {
+      display: flex;
+      width: 100%;
+      height: 100vh;
+    }
+
+    /* ===== LEFT PANE ===== */
+    .left-pane {
+      flex: 0 0 40%;
+      max-width: 33%;
+      min-width: 280px;
+      background: #000;
+      color: #f5f5f5;
+      box-sizing: border-box;
+      padding: 24px 36px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .left-inner {
+      display: flex;
+      gap: 25px;
+      align-items: flex-start;
+    }
+
+    .left-list-col {
+      flex: 0 0 140px;
+    }
+
+    .left-text-col {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .site-label {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #9a9a9a;
+      margin: 5 0 6px;
+    }
+.kern-apostrophe {
+  letter-spacing: -0.2em; /* 필요하면 -0.04 ~ -0.08em 사이로 조절 */
+}
+    .project-title {
+      font-size: 34px;
+      letter-spacing: 0.01em;
+      margin: 0 0 12px;
+      color: #ffffff;
+    }
+
+    .intro-copy {
+      font-size: 13px;
+      line-height: 1.2;
+      margin: -2 0 120px;
+      white-space: pre-line;
+      color: #dcdcdc;
+    }
+
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin: 38px 0 4px;
+      color: #a0a0a0;
+    }
+
+    .highlight-press {
+  color: #FEF387;
+}
+
+    .credits {
+      font-size: 11px;
+      line-height: 1.2;
+      margin: 0;
+      white-space: pre-line;
+      color: #b5b5b5;
+    }
+
+    .track-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      font-size: 13px;
+    }
+
+    .track-item {
+      position: relative;
+      cursor: pointer;
+      padding: 8px 0;
+      padding-left: 30px;
+      color: #555555;
+      transition: color 0.18s ease, transform 0.18s ease;
+    }
+
+    .track-item-label {
+      display: block;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      line-height: 1.3;
+    }
+
+    .track-item-number {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid #666666;
+      font-size: 11px;
+      line-height: 22px;
+      text-align: center;
+      color: #777777;
+      box-sizing: border-box;
+    }
+
+    .track-item.active {
+      color: #ffffff;
+      transform: translateX(1px);
+    }
+
+    .track-item.active .track-item-number {
+      background: #f5f5f5;
+      border-color: #f5f5f5;
+      color: #000000;
+      font-weight: 700;
+    }
+
+    .track-item:hover {
+      color: #d0d0d0;
+    }
+
+    /* ===== RIGHT PANE (VISUAL) ===== */
+    .right-pane {
+      flex: 1;
+      position: relative;
+      background: #000;
+      overflow: hidden;
+    }
+
+    canvas {
+      position: absolute;
+      inset: 0;
+      display: block;
+    }
+
+    .hud {
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      color: #ddd;
+      font: 11px/1.4 system-ui, "Apple SD Gothic Neo", -apple-system, BlinkMacSystemFont, sans-serif;
+      pointer-events: none;
+    }
+    .hud b { color: #fff; }
+  </style>
+</head>
+<body>
+  <!-- 오디오 소스 -->
+  <audio id="snd-subway"    src="subway.mp3"></audio>
+  <audio id="snd-truck"     src="truck.mp3"></audio>
+  <audio id="snd-calloff"   src="calloff.mp3"></audio>
+  <audio id="snd-apartment" src="apartment.mp3"></audio>
+  <audio id="snd-mart"      src="traffic.mp3"></audio>
+  <audio id="snd-traffic"   src="mart.mp3"></audio>
+  <audio id="snd-kids"      src="bus.mp3"></audio>
+  <audio id="snd-down"      src="kids.mp3"></audio>
+
+  <div class="layout">
+    <!-- LEFT -->
+    <section class="left-pane">
+      <div class="left-inner">
+        <!-- 왼쪽: 리스트 -->
+        <div class="left-list-col">
+          <ol class="track-list">
+            <li class="track-item" data-track="subway">
+              <span class="track-item-number">1</span>
+              <span class="track-item-label">Korean subway announcement</span>
+            </li>
+            <li class="track-item" data-track="truck">
+              <span class="track-item-number">2</span>
+              <span class="track-item-label">Sunday fruit truck calls</span>
+            </li>
+            <li class="track-item" data-track="calloff">
+              <span class="track-item-number">3</span>
+              <span class="track-item-label">Voicemail beep tones</span>
+            </li>
+            <li class="track-item" data-track="apartment">
+              <span class="track-item-number">4</span>
+              <span class="track-item-label">Summer night cricket chorus</span>
+            </li>
+            <li class="track-item" data-track="mart">
+              <span class="track-item-number">5</span>
+              <span class="track-item-label">Signal beeps at crosswalk</span>
+            </li>
+            <li class="track-item" data-track="traffic">
+              <span class="track-item-number">6</span>
+              <span class="track-item-label">Morning market vendors calling</span>
+            </li>
+            <li class="track-item" data-track="kids">
+              <span class="track-item-number">7</span>
+              <span class="track-item-label">Bus stop bell</span>
+            </li>
+            <li class="track-item" data-track="down">
+              <span class="track-item-number">8</span>
+              <span class="track-item-label">Playground kids' noise</span>
+            </li>
+          </ol>
+        </div>
+
+        <!-- 오른쪽: 프로젝트 설명 -->
+        <div class="left-text-col">
+          <p class="site-label">
+  WHEN CITY SOUNDS COME INTO VIEW
+</p>
+          <h1 class="project-title">SEOUL<br>SOUNDSCAPE</h1>
+
+          <p class="intro-copy">
+Soundscape is a project that captures everyday sounds from Seoul and translates them into visual waveforms you can see. The eight recordings include announcements, conversations, and layers of ambient noise that fills the city. 
+
+By dividing the tracks into odd and even numbers, the project reveals two moods within the city: its cool mechanical pulse and its warm human presence.
+
+Soundscape invites you to read the city landscape not only by hearing its sounds, but by seeing the shapes and movements they leave behind.
+          </p>
+
+          <p class="section-label">HOW TO</p>
+          <p class="credits">
+Select from the list to visually experience the sounds of the city. You can also <span class="highlight-press">press multiple sounds at once</span> to create your own urban soundscape.
+</p>
+
+          <p class="section-label">CREDITS</p>
+          <p class="credits">
+Sound editing · Visual system · Coding<br>— Soundscape project
+<br>Web implementation <br>— JavaScript · Web Audio API
+<br>All rights reserved · seoyeon Kim
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT -->
+    <section class="right-pane" id="right-pane">
+      <canvas id="cv"></canvas>
+      <div class="hud"></div>
+    </section>
+  </div>
+
+  <script>
+    (() => {
+      const cvs = document.getElementById('cv');
+      const ctx = cvs.getContext('2d', { alpha: false });
+      const rightPane = document.getElementById('right-pane');
+
+      const sndSubway    = document.getElementById('snd-subway');
+      const sndTruck     = document.getElementById('snd-truck');
+      const sndCalloff   = document.getElementById('snd-calloff');
+      const sndApartment = document.getElementById('snd-apartment');
+      const sndMart      = document.getElementById('snd-mart');
+      const sndTraffic   = document.getElementById('snd-traffic');
+       sndTraffic.volume = 0.3;
+      const sndKids      = document.getElementById('snd-kids');
+      const sndDown      = document.getElementById('snd-down');
+
+      // ===== 캔버스 리사이즈 (오른쪽 섹션 기준) =====
+      let W = 0, H = 0, DPR = Math.min(2, window.devicePixelRatio || 1);
+      function resize() {
+        const rect = rightPane.getBoundingClientRect();
+        W = cvs.width  = Math.floor(rect.width  * DPR);
+        H = cvs.height = Math.floor(rect.height * DPR);
+        cvs.style.width  = rect.width  + 'px';
+        cvs.style.height = rect.height + 'px';
+      }
+      window.addEventListener('resize', resize, { passive: true });
+      resize();
+
+      // ===== 이미지 에셋 =====
+      const imgBG        = new Image(); imgBG.src        = 'bg.png';
+      const imgSub       = new Image(); imgSub.src       = 'subway.jpeg';
+      const imgTruck     = new Image(); imgTruck.src     = 'truck.png';
+      const imgCalloff   = new Image(); imgCalloff.src   = 'calloff.png';
+      const imgApartment = new Image(); imgApartment.src = 'apartment.jpeg';
+      const imgMart      = new Image(); imgMart.src      = 'traffic.jpg';
+      const imgTraffic   = new Image(); imgTraffic.src   = 'mart.jpeg';
+      const imgKids      = new Image(); imgKids.src      = 'bus.png';
+      const imgDown      = new Image(); imgDown.src      = 'kids.png';
+
+      let assets = 0;
+      let fieldSub       = null;
+      let fieldTruck     = null;
+      let fieldCalloff   = null;
+      let fieldApartment = null;
+      let fieldMart      = null;
+      let fieldTraffic   = null;
+      let fieldKids      = null;
+      let fieldDown      = null;
+
+      [
+        imgBG,
+        imgSub, imgTruck,
+        imgCalloff, imgApartment, imgMart,
+        imgTraffic, imgKids, imgDown
+      ].forEach(im => {
+        im.onload  = onAsset;
+        im.onerror = onAsset;
+      });
+
+      function onAsset() {
+        assets++;
+        if (assets === 9) {
+          try {
+            fieldSub       = buildBrightnessField(imgSub);
+            fieldTruck     = buildBrightnessField(imgTruck);
+            fieldCalloff   = buildBrightnessField(imgCalloff);
+            fieldApartment = buildBrightnessField(imgApartment);
+            fieldMart      = buildBrightnessField(imgMart);
+            fieldTraffic   = buildBrightnessField(imgTraffic);
+            fieldKids      = buildBrightnessField(imgKids);
+            fieldDown      = buildBrightnessField(imgDown);
+          } catch (e) {
+            console.warn('brightness field error, fallback to pure waveform', e);
+            fieldSub = fieldTruck = fieldCalloff =
+            fieldApartment = fieldMart = fieldTraffic =
+            fieldKids = fieldDown = null;
+          }
+          start();
+        }
+      }
+
+      // ===== 유틸 =====
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+      function drawBackgroundCover(g, image) {
+        const iw = image.width, ih = image.height;
+        const cw = W, ch = H;
+        const ir = iw / ih, cr = cw / ch;
+        let w, h, x, y;
+        if (cr > ir) {
+          w = cw; h = cw / ir; x = 0; y = (ch - h) / 2;
+        } else {
+          h = ch; w = ch * ir; x = (cw - w) / 2; y = 0;
+        }
+        g.drawImage(image, x, y, w, h);
+      }
+
+      // ===== 이미지 → 밝기 필드 (오른쪽 섹션 비율로 cover) =====
+      function buildBrightnessField(img) {
+        const aspect = (rightPane.clientWidth || window.innerWidth * 0.6) /
+                       (rightPane.clientHeight || window.innerHeight);
+        const Wm = 180;
+        const Hm = Math.round(Wm / aspect);
+
+        const c = document.createElement('canvas');
+        c.width  = Wm;
+        c.height = Hm;
+        const g = c.getContext('2d');
+
+        const ir = img.width / img.height;
+        const cr = Wm / Hm;
+        let dw, dh, dx, dy;
+        if (cr > ir) {
+          dw = Wm;
+          dh = Wm / ir;
+          dx = 0;
+          dy = (Hm - dh) / 2;
+        } else {
+          dh = Hm;
+          dw = Hm * ir;
+          dx = (Wm - dw) / 2;
+          dy = 0;
+        }
+
+        g.clearRect(0, 0, Wm, Hm);
+        g.drawImage(img, dx, dy, dw, dh);
+
+        const data = g.getImageData(0, 0, Wm, Hm).data;
+        const out  = new Float32Array(Wm * Hm);
+
+        let minD = 1, maxD = 0;
+        for (let y = 0; y < Hm; y++) {
+          for (let x = 0; x < Wm; x++) {
+            const i = (y * Wm + x) * 4;
+            const r = data[i], gc = data[i+1], b = data[i+2];
+            const gray = (r + gc + b) / (3 * 255);
+            let dark = 1 - gray;
+            dark = Math.pow(dark, 1.6);
+            out[y * Wm + x] = dark;
+            if (dark < minD) minD = dark;
+            if (dark > maxD) maxD = dark;
+          }
+        }
+        const range = maxD - minD || 1;
+        for (let i = 0; i < out.length; i++) {
+          out[i] = (out[i] - minD) / range;
+        }
+        return { w: Wm, h: Hm, data: out };
+      }
+
+      function sampleField(field, nx, ny) {
+        if (!field) return 0;
+        const { w, h, data } = field;
+        const x = (clamp(nx, 0, 0.9999) * w) | 0;
+        const y = (clamp(ny, 0, 0.9999) * h) | 0;
+        return data[y * w + x];
+      }
+
+      // ===== Web Audio =====
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      let audioCtx = null;
+
+      let analyserSub       = null;
+      let analyserTruck     = null;
+      let analyserCalloff   = null;
+      let analyserApartment = null;
+      let analyserMart      = null;
+      let analyserTraffic   = null;
+      let analyserKids      = null;
+      let analyserDown      = null;
+
+      let dataSub       = null;
+      let dataTruck     = null;
+      let dataCalloff   = null;
+      let dataApartment = null;
+      let dataMart      = null;
+      let dataTraffic   = null;
+      let dataKids      = null;
+      let dataDown      = null;
+
+      let bufferLenSub = 0, bufferLenTruck = 0, bufferLenCalloff = 0,
+          bufferLenApartment = 0, bufferLenMart = 0, bufferLenTraffic = 0,
+          bufferLenKids = 0, bufferLenDown = 0;
+
+      function initAudio() {
+        if (!AudioCtx) return;
+        if (audioCtx) return;
+
+        audioCtx = new AudioCtx();
+
+        analyserSub       = audioCtx.createAnalyser();
+        analyserTruck     = audioCtx.createAnalyser();
+        analyserCalloff   = audioCtx.createAnalyser();
+        analyserApartment = audioCtx.createAnalyser();
+        analyserMart      = audioCtx.createAnalyser();
+        analyserTraffic   = audioCtx.createAnalyser();
+        analyserKids      = audioCtx.createAnalyser();
+        analyserDown      = audioCtx.createAnalyser();
+
+        [
+          analyserSub,
+          analyserTruck,
+          analyserCalloff,
+          analyserApartment,
+          analyserMart,
+          analyserTraffic,
+          analyserKids,
+          analyserDown
+        ].forEach(a => a.fftSize = 1024);
+
+        bufferLenSub       = analyserSub.frequencyBinCount;
+        bufferLenTruck     = analyserTruck.frequencyBinCount;
+        bufferLenCalloff   = analyserCalloff.frequencyBinCount;
+        bufferLenApartment = analyserApartment.frequencyBinCount;
+        bufferLenMart      = analyserMart.frequencyBinCount;
+        bufferLenTraffic   = analyserTraffic.frequencyBinCount;
+        bufferLenKids      = analyserKids.frequencyBinCount;
+        bufferLenDown      = analyserDown.frequencyBinCount;
+
+        dataSub       = new Uint8Array(bufferLenSub);
+        dataTruck     = new Uint8Array(bufferLenTruck);
+        dataCalloff   = new Uint8Array(bufferLenCalloff);
+        dataApartment = new Uint8Array(bufferLenApartment);
+        dataMart      = new Uint8Array(bufferLenMart);
+        dataTraffic   = new Uint8Array(bufferLenTraffic);
+        dataKids      = new Uint8Array(bufferLenKids);
+        dataDown      = new Uint8Array(bufferLenDown);
+
+        const srcSub       = audioCtx.createMediaElementSource(sndSubway);
+        const srcTruck     = audioCtx.createMediaElementSource(sndTruck);
+        const srcCalloff   = audioCtx.createMediaElementSource(sndCalloff);
+        const srcApartment = audioCtx.createMediaElementSource(sndApartment);
+        const srcMart      = audioCtx.createMediaElementSource(sndMart);
+        const srcTraffic   = audioCtx.createMediaElementSource(sndTraffic);
+        const srcKids      = audioCtx.createMediaElementSource(sndKids);
+        const srcDown      = audioCtx.createMediaElementSource(sndDown);
+
+        srcSub.connect(analyserSub);
+        analyserSub.connect(audioCtx.destination);
+
+        srcTruck.connect(analyserTruck);
+        analyserTruck.connect(audioCtx.destination);
+
+        srcCalloff.connect(analyserCalloff);
+        analyserCalloff.connect(audioCtx.destination);
+
+        srcApartment.connect(analyserApartment);
+        analyserApartment.connect(audioCtx.destination);
+
+        srcMart.connect(analyserMart);
+        analyserMart.connect(audioCtx.destination);
+
+        srcTraffic.connect(analyserTraffic);
+        analyserTraffic.connect(audioCtx.destination);
+
+        srcKids.connect(analyserKids);
+        analyserKids.connect(audioCtx.destination);
+
+        srcDown.connect(analyserDown);
+        analyserDown.connect(audioCtx.destination);
+      }
+
+      function ensureAudioContext() {
+        if (!AudioCtx) return;
+        if (!audioCtx) initAudio();
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      }
+
+// ===== 파형 + line-halftone =====
+function drawWaveform() {
+  if (!audioCtx) return;
+
+  // 각 트랙의 스펙트럼 데이터 읽기
+  if (analyserSub       && dataSub)       analyserSub.getByteFrequencyData(dataSub);
+  if (analyserTruck     && dataTruck)     analyserTruck.getByteFrequencyData(dataTruck);
+  if (analyserCalloff   && dataCalloff)   analyserCalloff.getByteFrequencyData(dataCalloff);
+  if (analyserApartment && dataApartment) analyserApartment.getByteFrequencyData(dataApartment);
+  if (analyserMart      && dataMart)      analyserMart.getByteFrequencyData(dataMart);
+  if (analyserTraffic   && dataTraffic)   analyserTraffic.getByteFrequencyData(dataTraffic);
+  if (analyserKids      && dataKids)      analyserKids.getByteFrequencyData(dataKids);
+  if (analyserDown      && dataDown)      analyserDown.getByteFrequencyData(dataDown);
+
+  const barCount  = Math.max(120, Math.floor(W / (3 * DPR)));
+  const stepX     = W / barCount;
+  const maxLen    = H * 0.94;
+  const minLen    = H * 0.18;
+  const segCount  = 48;
+  const threshold = 0.02;
+
+  // ===== 1번: SUBWAY (위→아래, 좌→우) =====
+  if (fieldSub && analyserSub && dataSub) {
+    const stepSub = Math.max(1, Math.floor(bufferLenSub / barCount));
+    ctx.save();
+    ctx.strokeStyle = '#00FFFB';
+    ctx.fillStyle   = '#00FFFB';
+
+    for (let i = 0; i < barCount; i++) {
+      const idx    = Math.min(bufferLenSub - 1, i * stepSub);
+      const vAudio = dataSub[idx] / 255;
+      if (vAudio < threshold) continue;
+
+      const baseLen = minLen + (maxLen - minLen) * vAudio;
+      const x       = i * stepX;
+      const baseY   = 0;
+      const endY    = baseY + baseLen;
+
+      // 기본 라인
+      ctx.globalAlpha = 0.9;
+      ctx.lineWidth   = 1 * DPR;
+      ctx.beginPath();
+      ctx.moveTo(x, baseY);
+      ctx.lineTo(x, endY);
+      ctx.stroke();
+
+      // 끝 사각형 캡
+      const capW = 4 * DPR, capH = 6 * DPR;
+      ctx.fillRect(x - capW / 2, endY - capH / 2, capW, capH);
+
+      // 이미지 기반 세그먼트
+      const segLen = baseLen / segCount;
+      for (let s = 0; s < segCount; s++) {
+        const cy = baseY + (s + 0.5) * segLen;
+        const ny = clamp(cy / H, 0, 1);
+        const nx = clamp(i / (barCount - 1 || 1), 0, 1);
+        const dark = sampleField(fieldSub, nx, ny);
+        if (dark <= 0.08) continue;
+
+        const thickness = (0.8 + 2.5 * dark) * DPR;
+        const hSeg      = segLen * (0.4 + 0.8 * dark);
+        const alpha     = 0.15 + 0.7 * dark;
+
+        ctx.globalAlpha = alpha;
+        ctx.fillRect(x - thickness / 2, cy - hSeg / 2, thickness, hSeg);
+      }
+    }
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  // ===== 2번: TRUCK (아래→위, 우→좌) =====
+  if (fieldTruck && analyserTruck && dataTruck) {
+    const stepTruck = Math.max(1, Math.floor(bufferLenTruck / barCount));
+    ctx.save();
+    ctx.strokeStyle = '#FF00DD';
+    ctx.fillStyle   = '#FF00DD';
+
+    for (let i = 0; i < barCount; i++) {
+      const idx    = Math.min(bufferLenTruck - 1, i * stepTruck);
+      const vAudio = dataTruck[idx] / 255;
+      if (vAudio < threshold) continue;
+
+      const baseLen = minLen + (maxLen - minLen) * vAudio;
+      const x       = W - i * stepX;
+      const baseY   = H;
+      const endY    = baseY - baseLen;
+
+      ctx.globalAlpha = 0.9;
+      ctx.lineWidth   = 1 * DPR;
+      ctx.beginPath();
+      ctx.moveTo(x, baseY);
+      ctx.lineTo(x, endY);
+      ctx.stroke();
+
+      const capW = 4 * DPR, capH = 6 * DPR;
+      ctx.fillRect(x - capW / 2, endY - capH / 2, capW, capH);
+
+      const segLen = baseLen / segCount;
+      for (let s = 0; s < segCount; s++) {
+        const cy = baseY - (s + 0.5) * segLen;
+        const ny = clamp(cy / H, 0, 1);
+        const nx = clamp(i / (barCount - 1 || 1), 0, 1);
+        const dark = sampleField(fieldTruck, nx, ny);
+        if (dark <= 0.08) continue;
+
+        const thickness = (0.8 + 2.5 * dark) * DPR;
+        const hSeg      = segLen * (0.4 + 0.8 * dark);
+        const alpha     = 0.15 + 0.7 * dark;
+
+        ctx.globalAlpha = alpha;
+        ctx.fillRect(x - thickness / 2, cy - hSeg / 2, thickness, hSeg);
+      }
+    }
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  // ===== 중앙 기준 양쪽으로 뻗는 공통 파형(3,7,8 기본형) =====
+  const midY   = H * 0.5;
+  const ampMax = H * 0.4;
+  const ampMin = H * 0.08;
+
+  function drawCenterFamily(dataArr, bufferLen, field, color) {
+    if (!field || !dataArr || bufferLen === 0) return;
+
+    const step = Math.max(1, Math.floor(bufferLen / barCount));
+
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle   = color;
+
+    for (let i = 0; i < barCount; i++) {
+      const idx    = Math.min(bufferLen - 1, i * step);
+      const vAudio = dataArr[idx] / 255;
+      if (vAudio < threshold) continue;
+
+      const amp = ampMin + (ampMax - ampMin) * vAudio;
+      const topY    = midY - amp;
+      const bottomY = midY + amp;
+      const x       = i * stepX;
+
+      ctx.globalAlpha = 0.9;
+      ctx.lineWidth   = 1 * DPR;
+      ctx.beginPath();
+      ctx.moveTo(x, topY);
+      ctx.lineTo(x, bottomY);
+      ctx.stroke();
+
+      const capW = 4 * DPR, capH = 6 * DPR;
+      ctx.fillRect(x - capW / 2, topY - capH / 2, capW, capH);
+      ctx.fillRect(x - capW / 2, bottomY - capH / 2, capW, capH);
+
+      const totalLen = bottomY - topY;
+      const segLen   = totalLen / segCount;
+
+      for (let s = 0; s < segCount; s++) {
+        const cy = topY + (s + 0.5) * segLen;
+        const ny = clamp(cy / H, 0, 1);
+        const nx = clamp(i / (barCount - 1 || 1), 0, 1);
+        const dark = sampleField(field, nx, ny);
+        if (dark <= 0.08) continue;
+
+        const thickness = (0.8 + 2.5 * dark) * DPR;
+        const hSeg      = segLen * (0.4 + 0.8 * dark);
+        const alpha     = 0.18 + 0.75 * dark;
+
+        ctx.globalAlpha = alpha;
+        ctx.fillRect(x - thickness / 2, cy - hSeg / 2, thickness, hSeg);
+      }
+    }
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  // ===== 4번용: 3번 구조를 좌우 반전 (우측에서 시작) =====
+  function drawCenterFamilyRight(dataArr, bufferLen, field, color) {
+    if (!field || !dataArr || bufferLen === 0) return;
+
+    const step = Math.max(1, Math.floor(bufferLen / barCount));
+
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle   = color;
+
+    for (let i = 0; i < barCount; i++) {
+      const idx    = Math.min(bufferLen - 1, i * step);
+      const vAudio = dataArr[idx] / 255;
+      if (vAudio < threshold) continue;
+
+      const amp = ampMin + (ampMax - ampMin) * vAudio;
+      const topY    = midY - amp;
+      const bottomY = midY + amp;
+
+      const t  = (barCount <= 1) ? 0 : i / (barCount - 1); // 0~1
+      const x  = W - t * W;                               // 오른쪽→왼쪽
+      const nx = clamp(1 - t, 0, 1);                      // 이미지 샘플도 좌우 반전
+
+      ctx.globalAlpha = 0.9;
+      ctx.lineWidth   = 1 * DPR;
+      ctx.beginPath();
+      ctx.moveTo(x, topY);
+      ctx.lineTo(x, bottomY);
+      ctx.stroke();
+
+      const capW = 4 * DPR, capH = 6 * DPR;
+      ctx.fillRect(x - capW / 2, topY - capH / 2, capW, capH);
+      ctx.fillRect(x - capW / 2, bottomY - capH / 2, capW, capH);
+
+      const totalLen = bottomY - topY;
+      const segLen   = totalLen / segCount;
+
+      for (let s = 0; s < segCount; s++) {
+        const cy = topY + (s + 0.5) * segLen;
+        const ny = clamp(cy / H, 0, 1);
+        const dark = sampleField(field, nx, ny);
+        if (dark <= 0.08) continue;
+
+        const thickness = (0.8 + 2.5 * dark) * DPR;
+        const hSeg      = segLen * (0.4 + 0.8 * dark);
+        const alpha     = 0.18 + 0.75 * dark;
+
+        ctx.globalAlpha = alpha;
+        ctx.fillRect(x - thickness / 2, cy - hSeg / 2, thickness, hSeg);
+      }
+    }
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  // ===== 삼각형 파형(상단에서 내려옴) — 5번에서 사용 =====
+  function drawTriangleTop(dataArr, bufferLen, field, color) {
+    if (!field || !dataArr || bufferLen === 0) return;
+
+    const step = Math.max(1, Math.floor(bufferLen / barCount));
+
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle   = color;
+
+    for (let i = 0; i < barCount; i++) {
+      const idx    = Math.min(bufferLen - 1, i * step);
+      const vAudio = dataArr[idx] / 255;
+      if (vAudio < threshold) continue;
+
+      const nx = clamp(i / (barCount - 1 || 1), 0, 1); // 0~1
+      const tri = 1 - Math.abs(2 * nx - 1);            // 0,1에서 0 / 가운데 1
+
+      const baseLen = minLen + (maxLen - minLen) * vAudio;
+      const len     = baseLen * tri;
+      if (len <= 0) continue;
+
+      const x     = i * stepX;
+      const baseY = 0;
+      const endY  = baseY + len;
+
+      // 기본 라인
+      ctx.globalAlpha = 0.9;
+      ctx.lineWidth   = 1 * DPR;
+      ctx.beginPath();
+      ctx.moveTo(x, baseY);
+      ctx.lineTo(x, endY);
+      ctx.stroke();
+
+      // 끝 사각형 캡
+      const capW = 4 * DPR, capH = 6 * DPR;
+      ctx.fillRect(x - capW / 2, endY - capH / 2, capW, capH);
+
+      // 세그먼트 halftone
+      const segLen = len / segCount;
+      for (let s = 0; s < segCount; s++) {
+        const cy = baseY + (s + 0.5) * segLen;
+        const ny = clamp(cy / H, 0, 1);
+        const dark = sampleField(field, nx, ny);
+        if (dark <= 0.08) continue;
+
+        const thickness = (0.8 + 2.5 * dark) * DPR;
+        const hSeg      = segLen * (0.4 + 0.8 * dark);
+        const alpha     = 0.18 + 0.75 * dark;
+
+        ctx.globalAlpha = alpha;
+        ctx.fillRect(x - thickness / 2, cy - hSeg / 2, thickness, hSeg);
+      }
+    }
+
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  // ===== 삼각형 파형(하단에서 올라옴) — 6번에서 사용 =====
+  function drawTriangleBottom(dataArr, bufferLen, field, color) {
+    if (!field || !dataArr || bufferLen === 0) return;
+
+    const step = Math.max(1, Math.floor(bufferLen / barCount));
+
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle   = color;
+
+    for (let i = 0; i < barCount; i++) {
+      const idx    = Math.min(bufferLen - 1, i * step);
+      const vAudio = dataArr[idx] / 255;
+      if (vAudio < threshold) continue;
+
+      const nx  = clamp(i / (barCount - 1 || 1), 0, 1); // 0~1
+      const tri = 1 - Math.abs(2 * nx - 1);             // 가운데 1, 양끝 0
+
+      const baseLen = minLen + (maxLen - minLen) * vAudio;
+      const len     = baseLen * tri;
+      if (len <= 0) continue;
+
+      const x     = i * stepX;
+      const baseY = H;         // 아래에서 시작
+      const endY  = baseY - len;
+
+      // 기본 라인
+      ctx.globalAlpha = 0.9;
+      ctx.lineWidth   = 1 * DPR;
+      ctx.beginPath();
+      ctx.moveTo(x, baseY);
+      ctx.lineTo(x, endY);
+      ctx.stroke();
+
+      // 끝 사각형 캡
+      const capW = 4 * DPR, capH = 6 * DPR;
+      ctx.fillRect(x - capW / 2, endY - capH / 2, capW, capH);
+
+      // 세그먼트 halftone
+      const segLen = len / segCount;
+      for (let s = 0; s < segCount; s++) {
+        const cy = baseY - (s + 0.5) * segLen;
+        const ny = clamp(cy / H, 0, 1);
+        const dark = sampleField(field, nx, ny);
+        if (dark <= 0.08) continue;
+
+        const thickness = (0.8 + 2.5 * dark) * DPR;
+        const hSeg      = segLen * (0.4 + 0.8 * dark);
+        const alpha     = 0.18 + 0.75 * dark;
+
+        ctx.globalAlpha = alpha;
+        ctx.fillRect(x - thickness / 2, cy - hSeg / 2, thickness, hSeg);
+      }
+    }
+
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  // ===== 7번: 3번 구조를 "/" 방향 대각선으로 회전 (모서리→모서리 풀 길이) =====
+function drawDiagonalSlash(dataArr, bufferLen, field, color) {
+  if (!field || !dataArr || bufferLen === 0) return;
+
+  const step = Math.max(1, Math.floor(bufferLen / barCount));
+
+  // / 방향: 왼쪽 아래(0, H) → 오른쪽 위(W, 0)
+  const x0 = 0,   y0 = H;
+  const x1 = W,   y1 = 0;
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  const angle = Math.atan2(dy, dx);      // 대각선 방향
+  const nAng  = angle + Math.PI / 2;     // 그에 수직인 방향
+  const cosN  = Math.cos(nAng);
+  const sinN  = Math.sin(nAng);
+
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle   = color;
+
+  for (let i = 0; i < barCount; i++) {
+    const idx    = Math.min(bufferLen - 1, i * step);
+    const vAudio = dataArr[idx] / 255;
+    if (vAudio < threshold) continue;
+
+    const amp = ampMin + (ampMax - ampMin) * vAudio;
+    const len = amp * 2; // 위·아래 합친 길이
+
+    const t  = (barCount <= 1) ? 0 : i / (barCount - 1); // 0~1
+    const cx = x0 + dx * t;
+    const cy = y0 + dy * t;
+
+    const half = len * 0.5;
+    const x1l = cx - cosN * half;
+    const y1l = cy - sinN * half;
+    const x2l = cx + cosN * half;
+    const y2l = cy + sinN * half;
+
+    // 기본 라인
+    ctx.globalAlpha = 0.9;
+    ctx.lineWidth   = 1 * DPR;
+    ctx.beginPath();
+    ctx.moveTo(x1l, y1l);
+    ctx.lineTo(x2l, y2l);
+    ctx.stroke();
+
+    // 끝 사각형 캡
+    const capW = 4 * DPR, capH = 6 * DPR;
+    ctx.fillRect(x1l - capW / 2, y1l - capH / 2, capW, capH);
+    ctx.fillRect(x2l - capW / 2, y2l - capH / 2, capW, capH);
+
+    // 세그먼트 halftone
+    const segLen = len / segCount;
+    for (let s = 0; s < segCount; s++) {
+      const d  = -half + (s + 0.5) * segLen;   // -half ~ +half
+      const sx = cx + cosN * d;
+      const sy = cy + sinN * d;
+
+      const nx = clamp(sx / W, 0, 1);
+      const ny = clamp(sy / H, 0, 1);
+      const dark = sampleField(field, nx, ny);
+      if (dark <= 0.08) continue;
+
+      const thickness = (1.6 + 5.0 * dark) * DPR;
+      const hSeg      = segLen * (0.4 + 0.8 * dark);
+      const alpha     = 0.18 + 0.75 * dark;
+
+      ctx.globalAlpha = alpha;
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.rotate(nAng);
+      ctx.fillRect(-thickness / 2, -hSeg / 2, thickness, hSeg);
+      ctx.restore();
+    }
+  }
+
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
+
+// ===== 8번: 3번 구조를 "\" 방향 대각선으로 회전 (모서리→모서리 풀 길이) =====
+function drawDiagonalBackslash(dataArr, bufferLen, field, color) {
+  if (!field || !dataArr || bufferLen === 0) return;
+
+  const step = Math.max(1, Math.floor(bufferLen / barCount));
+
+  // \ 방향: 왼쪽 위(0, 0) → 오른쪽 아래(W, H)
+  const x0 = 0,   y0 = 0;
+  const x1 = W,   y1 = H;
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  const angle = Math.atan2(dy, dx);
+  const nAng  = angle + Math.PI / 2;
+  const cosN  = Math.cos(nAng);
+  const sinN  = Math.sin(nAng);
+
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle   = color;
+
+  for (let i = 0; i < barCount; i++) {
+    const idx    = Math.min(bufferLen - 1, i * step);
+    const vAudio = dataArr[idx] / 255;
+    if (vAudio < threshold) continue;
+
+    const amp = ampMin + (ampMax - ampMin) * vAudio;
+    const len = amp * 2;
+
+    const t  = (barCount <= 1) ? 0 : i / (barCount - 1);
+    const cx = x0 + dx * t;
+    const cy = y0 + dy * t;
+
+    const half = len * 0.5;
+    const x1l = cx - cosN * half;
+    const y1l = cy - sinN * half;
+    const x2l = cx + cosN * half;
+    const y2l = cy + sinN * half;
+
+    ctx.globalAlpha = 0.9;
+    ctx.lineWidth   = 1 * DPR;
+    ctx.beginPath();
+    ctx.moveTo(x1l, y1l);
+    ctx.lineTo(x2l, y2l);
+    ctx.stroke();
+
+    const capW = 4 * DPR, capH = 6 * DPR;
+    ctx.fillRect(x1l - capW / 2, y1l - capH / 2, capW, capH);
+    ctx.fillRect(x2l - capW / 2, y2l - capH / 2, capW, capH);
+
+    const segLen = len / segCount;
+    for (let s = 0; s < segCount; s++) {
+      const d  = -half + (s + 0.5) * segLen;
+      const sx = cx + cosN * d;
+      const sy = cy + sinN * d;
+
+      const nx = clamp(sx / W, 0, 1);
+      const ny = clamp(sy / H, 0, 1);
+      const dark = sampleField(field, nx, ny);
+      if (dark <= 0.08) continue;
+
+      const thickness = (1.6 + 5.0 * dark) * DPR;
+      const hSeg      = segLen * (0.4 + 0.8 * dark);
+      const alpha     = 0.18 + 0.75 * dark;
+
+      ctx.globalAlpha = alpha;
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.rotate(nAng);
+      ctx.fillRect(-thickness / 2, -hSeg / 2, thickness, hSeg);
+      ctx.restore();
+    }
+  }
+
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
+
+
+  // ===== 3,4,5,6,7,8 호출 =====
+  drawCenterFamily       (dataCalloff,   bufferLenCalloff,   fieldCalloff,   '#1947FF'); // 3
+
+  drawCenterFamilyRight  (dataApartment, bufferLenApartment, fieldApartment, '#FEF387'); // 4
+
+  // 🔁 5,6: 삼각형 상하 순서 교체
+  drawTriangleBottom     (dataMart,      bufferLenMart,      fieldMart,      '#80EFFF'); // 5: 하단 삼각형
+  drawTriangleTop        (dataTraffic,   bufferLenTraffic,   fieldTraffic,   '#FF6F00'); // 6: 상단 삼각형
+
+  // 🔁 7,8: 대각선 방향 서로 교체
+  drawDiagonalBackslash  (dataKids,      bufferLenKids,      fieldKids,      '#504EFF'); // 7: "\" 대각선
+  drawDiagonalSlash      (dataDown,      bufferLenDown,      fieldDown,      '#FF5975'); // 8: "/" 대각선
+}
+
+
+
+
+
+
+      // ===== 메인 루프 =====
+      let last = 0;
+      function start() {
+        last = performance.now();
+        loop(last);
+      }
+
+      function loop(now) {
+        requestAnimationFrame(loop);
+        const dt = (now - last) / 1000;
+        last = now;
+
+        drawBackgroundCover(ctx, imgBG);
+        drawWaveform();
+
+        // 비네트
+        const g = ctx.createRadialGradient(
+          W * 0.5, H * 0.92, 0,
+          W * 0.5, H * 0.92, Math.max(W, H) * 0.75
+        );
+        g.addColorStop(0, 'rgba(0,0,0,0)');
+        g.addColorStop(1, 'rgba(0,0,0,0.55)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      // ===== 좌측 리스트 클릭 → 사운드 토글 =====
+      const trackItems = Array.from(document.querySelectorAll('.track-item'));
+
+      const tracks = {
+        subway:    { audio: sndSubway    },
+        truck:     { audio: sndTruck     },
+        calloff:   { audio: sndCalloff   },
+        apartment: { audio: sndApartment },
+        mart:      { audio: sndMart      },
+        traffic:   { audio: sndTraffic   },
+        kids:      { audio: sndKids      },
+        down:      { audio: sndDown      }
+      };
+
+      trackItems.forEach(li => {
+        li.addEventListener('click', () => {
+          const id   = li.dataset.track;
+          const meta = tracks[id];
+          const isActive = li.classList.contains('active');
+
+          if (!meta || !meta.audio) {
+            // 혹시 나중에 무음 트랙 생기면 스타일만 토글
+            li.classList.toggle('active');
+            return;
+          }
+
+          ensureAudioContext();
+
+          if (isActive && !meta.audio.paused) {
+            // 이미 켜져 있으면 끄기
+            meta.audio.pause();
+            meta.audio.currentTime = 0;
+            li.classList.remove('active');
+          } else {
+            // 다시 누르면 다시 0부터 재생 (동시 재생 허용)
+            meta.audio.currentTime = 0;
+            meta.audio.play();
+            li.classList.add('active');
+          }
+        });
+      });
+
+      // 초기: 아무 것도 자동 재생 X, 1번만 하이라이트
+      const first = document.querySelector('.track-item[data-track="subway"]');
+      if (first) first.classList.add('active');
+
+    })();
+  </script>
+</body>
+</html>
